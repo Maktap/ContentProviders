@@ -3,8 +3,10 @@ package com.ruina.contentproviders;
 import android.Manifest;
 import android.content.ContentProvider;
 import android.content.ContentResolver;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -16,6 +18,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import android.provider.ContactsContract;
+import android.provider.Settings;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -51,9 +54,9 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG).setAction("Action", null).show();
 
-                checkPermission();
+
+                checkPermission(view);
 
             }
         });
@@ -75,7 +78,7 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public void checkPermission(){
+    public void checkPermission(View view){
         if(ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED){
 
             ContentResolver contentResolver = getContentResolver();
@@ -100,8 +103,26 @@ public class MainActivity extends AppCompatActivity {
             }
 
         }else{
-            ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.READ_CONTACTS},1000);
+            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_INDEFINITE).setAction("Action", new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if(ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,Manifest.permission.READ_CONTACTS)){
+                        //Eğer "Bir daha sorma " seçeneği seçilmemiş ise ,izin isteme gösterilebiliniyorsa --> izin iste
+                        ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.READ_CONTACTS},1000);
+                    }else{
+                        // Kullanıcı, "bir daha gösterme seçeneğini seçmiş ise --> App özelliklerine yönlendir."
+                        Intent intent = new Intent();
+                        intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                        Uri uri = Uri.fromParts("package",MainActivity.this.getPackageName(),null);
+                        intent.setData(uri);
+                        MainActivity.this.startActivity(intent);
 
+                    }
+
+                }
+            }).show();
+
+            //
         }
     }
 
